@@ -32,9 +32,9 @@ set -e
 
 exec 3>&1
 export WG_HIDE_KEYS=never
-netns0="wg-test-$$-0"
-netns1="wg-test-$$-1"
-netns2="wg-test-$$-2"
+netns0="wg-test-0"
+netns1="wg-test-1"
+netns2="wg-test-2"
 program=$1
 # export LOG_LEVEL="verbose"
 
