@@ -3,9 +3,10 @@
 
 exec 3>&1
 export WG_HIDE_KEYS=never
-netns0="wg-test-0"
-netns1="wg-test-1"
-netns2="wg-test-2"
+netns0="ns0"
+netns1="ns1"
+netns2="ns2"
+netns3="ns3"
 program=$1
 # export LOG_LEVEL="verbose"
 
@@ -15,9 +16,11 @@ maybe_exec() { if [[ $BASHPID -eq $$ ]]; then "$@"; else exec "$@"; fi; }
 n0() { pretty 0 "$*"; maybe_exec ip netns exec $netns0 "$@"; }
 n1() { pretty 1 "$*"; maybe_exec ip netns exec $netns1 "$@"; }
 n2() { pretty 2 "$*"; maybe_exec ip netns exec $netns2 "$@"; }
+n3() { pretty 3 "$*"; maybe_exec ip netns exec $netns3 "$@"; }
 ip0() { pretty 0 "ip $*"; ip -n $netns0 "$@"; }
 ip1() { pretty 1 "ip $*"; ip -n $netns1 "$@"; }
 ip2() { pretty 2 "ip $*"; ip -n $netns2 "$@"; }
+ip3() { pretty 3 "ip $*"; ip -n $netns3 "$@"; }
 sleep() { read -t "$1" -N 0 || true; }
 waitiperf() { pretty "${1//*-}" "wait for iperf:5201"; while [[ $(ss -N "$1" -tlp 'sport = 5201') != *iperf3* ]]; do sleep 0.1; done; }
 waitncatudp() { pretty "${1//*-}" "wait for udp:1111"; while [[ $(ss -N "$1" -ulp 'sport = 1111') != *ncat* ]]; do sleep 0.1; done; }
@@ -31,15 +34,18 @@ cleanup() {
     ip0 link del dev wg1
     ip1 link del dev wg1
     ip2 link del dev wg1
-    local to_kill="$(ip netns pids $netns0) $(ip netns pids $netns1) $(ip netns pids $netns2)"
+    ip3 link del dev wg1
+    local to_kill="$(ip netns pids $netns0) $(ip netns pids $netns1) $(ip netns pids $netns2) $(ip netns pids $netns3)"
     [[ -n $to_kill ]] && kill $to_kill
     pp ip netns del $netns1
     pp ip netns del $netns2
+    pp ip netns del $netns3
     pp ip netns del $netns0
     exit
 }
 
 ip1 link del wg1
 ip2 link del wg2
+ip3 link del wg3
 
 cleanup
